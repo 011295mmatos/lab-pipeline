@@ -59,7 +59,7 @@ jobs:
       
       - name: Push para ECR
         run: |
-          docker push 
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
           echo "✅ Imagem enviada para o ECR!"
           echo "URI: $ECR_REGISTRY/$ECR_REPOSITORY:latest"
