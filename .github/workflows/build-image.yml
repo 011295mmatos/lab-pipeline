@@ -5,14 +5,32 @@ on:
     branches:
       - master
 
+
 jobs:
+
+  env:
+    AWS_REGION: ${{ secrets.AWS_REGION}}
+    ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.sa-east-1.amazonaws.com
+    ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+
   build:
     runs-on: ubuntu-latest
     
     steps:
       - name: Checagem-código
         uses: actions/checkout@v4
-      
+
+      - name: Configurando Credenciais de Acesso
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION}}
+
+      - name: Logando Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
       # Criar o Dockerfile
       - name: Criar-Dockerfile
         run: |
@@ -35,5 +53,13 @@ jobs:
       # Build de imagem
       - name: Build
         run: |
-          docker build -t minha-app:latest .
-          echo "Build concluído!"
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} .
+          echo "Build Concluído"
+      
+      - name: Push para ECR
+        run: |
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+          echo "✅ Imagem enviada para o ECR!"
+          echo "URI: $ECR_REGISTRY/$ECR_REPOSITORY:latest"
