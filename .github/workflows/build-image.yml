@@ -1,0 +1,39 @@
+name: Build Docker Image
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checagem-código
+        uses: actions/checkout@v4
+      
+      # Criar o Dockerfile
+      - name: Criar-Dockerfile
+        run: |
+          cat > Dockerfile << 'EOF'
+          FROM python:3.14.0rc3-alpine3.22
+          
+          WORKDIR /app
+          
+          COPY requirements.txt .
+          RUN pip install --no-cache-dir -r requirements.txt
+          
+          COPY . .
+          
+          CMD ["python", "app.py"]
+          EOF
+          
+          echo "Dockerfile criado!"
+          cat Dockerfile
+      
+      # Build de imagem
+      - name: Build
+        run: |
+          docker build -t minha-app:latest .
+          echo "Build concluído!"
